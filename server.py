@@ -1,5 +1,6 @@
 import socket
 import threading
+import random
 
 HOST = '127.0.0.1'
 PORT = 5555
@@ -13,33 +14,38 @@ def handle_client(conn):
             players.append(conn)  # Adiciona o novo jogador à lista de jogadores
         print('Novo jogador conectado:', conn.getpeername())
 
+        number = random.randint(1, 100)  # Gera um novo número aleatório para cada jogo
+
         while True:
-            data = conn.recv(1024).decode()
+            try:
+                data = conn.recv(1024).decode()
 
-            if not data:
+                if not data:
+                    break
+
+                guess = int(data)
+
+                if guess == number:
+                    response = 'Correto! Você venceu o jogo!'
+                    break
+                elif guess < number:
+                    response = 'Maior'
+                else:
+                    response = 'Menor'
+
+                conn.sendall(response.encode())
+
+            except OSError as e:
+                print('Erro durante a comunicação com o jogador:', conn.getpeername(), '-', e)
                 break
-
-            guess = int(data)
-
-            if guess == number:
-                response = 'Correto! Você venceu o jogo!'
-                break
-            elif guess < number:
-                response = 'Maior'
-            else:
-                response = 'Menor'
-
-            conn.sendall(response.encode())
 
     finally:
         with lock:
             players.remove(conn)  # Remove o jogador da lista de jogadores
+        print('Jogador acertou e foi desconectado:', conn.getpeername())
         conn.close()
-        print('Jogador desconectado:', conn.getpeername())
 
 def start_game():
-    number = 42
-
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((HOST, PORT))
         server_socket.listen()
@@ -52,3 +58,7 @@ def start_game():
 
 if __name__ == '__main__':
     start_game()
+
+# lsof -i :5555
+# kill -9 13942
+# python3 server.py
