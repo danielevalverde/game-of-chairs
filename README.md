@@ -13,7 +13,6 @@ for (i ; i < parada; i++)
 
 cadeirasDisponiveis = cadeiras.lenght
 
-for (i ; i < Client.lenght; i++)
 - aguarda o cliente digitar o numero da cadeira
 - pegar numero da cadeira do cliente 
 - verifica se a cadeira tá disponivel
