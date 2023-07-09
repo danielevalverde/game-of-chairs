@@ -1,17 +1,15 @@
 Lógica do servidor
 
-variavel Parada
 
-parada = Math.random()
 
-clientes = []
-cadeiras = []
+parada = Math.random() # vai definir o momento em que a musica para
 
+clientes = [] # quantidade de clientes conectados ao servidor
+cadeiras = [] # quantidade de cadeiras disponíveis
+cadeiras = [x |numClient |x  |x  ] # vamos inicializar com x, as posições das cadeiras disponiveis, assim quando a gente fizer a verificação no vetor, só adicionamos um cliente se na posição que ele escolheu tiver um x ao invés de um numero. Esse numero representa o identificador do cliente
 
 for (i ; i < parada; i++)
     print('...')
-    # o que foi impresso: . . . . . .
- cadeiras = [x |numClient |x  |x  ]
 
 cadeirasDisponiveis = cadeiras.lenght
 for (i ; i < Client.lenght; i++)
