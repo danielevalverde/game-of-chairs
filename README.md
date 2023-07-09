@@ -12,13 +12,14 @@ for (i ; i < parada; i++)
     print('...')
 
 cadeirasDisponiveis = cadeiras.lenght
+
 for (i ; i < Client.lenght; i++)
 - aguarda o cliente digitar o numero da cadeira
 - pegar numero da cadeira do cliente 
 - verifica se a cadeira tá disponivel
 - se disponivel
     cadeiras.push(numClient)
-    disponiveis--
+    cadeirasDisponiveis--
 - se nao tiver disponivel  
     responde a negativa pro cliente "tente novamnte" e o cliente pode digitar outro numero
 
