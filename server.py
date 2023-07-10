@@ -30,11 +30,11 @@ number = 42 #TODO: remover
 
 
 def play_music(conn):
-    conn.sendall(constants.PLAY_MUSIC)
+    conn.sendall(constants.PLAY_MUSIC.encode())
 
 
 def stop_music(conn):
-    conn.sendall(constants.STOP_MUSIC)
+    conn.sendall(constants.STOP_MUSIC.encode())
 
 
 def handle_client(conn):
