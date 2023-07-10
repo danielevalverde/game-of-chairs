@@ -1,5 +1,3 @@
-from pydub import AudioSegment
-from pydub.playback import play
 import socket
 from playsound import playsound
 
@@ -8,8 +6,12 @@ import constants
 HOST = '127.0.0.1'
 PORT = 5555
 
+
 def play_music():
-    playsound('music/ciranda-cirandinha.mp3')
+    try:
+        playsound('music/ciranda-cirandinha.mp3')
+    except:
+        playsound('music/ciranda-cirandinha-2.mp3')
 
 
 def play_game():
@@ -31,7 +33,7 @@ def play_game():
             client_socket.sendall(constants.READY.encode() if ready == 's' else constants.NOT_READY.encode())
             response = client_socket.recv(1024).decode()
 
-            #Agora eu testo se o comando é para esperar ou começar a música
+            # Agora eu testo se o comando é para esperar ou começar a música
             if response == constants.PLAY_MUSIC:
                 print("Tocando música")
                 play_music()

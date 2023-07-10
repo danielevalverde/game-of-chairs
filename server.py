@@ -24,7 +24,6 @@ PORT = 5556
 
 players = []  # Lista de jogadores conectados
 players_ready = 0
-is_music_playing = False
 lock = threading.Lock()  # Lock para garantir acesso exclusivo à lista de jogadores
 number = 42 #TODO: remover
 
@@ -43,17 +42,13 @@ def handle_client(conn):
             players.append(conn)  # Adiciona o novo jogador à lista de jogadores
         print('Novo jogador conectado:', conn.getpeername())
         is_this_player_ready = False
+        is_music_playing = False
         while True:
             # Espera todos os jogadores estarem prontos. Quando eles mandarem mensagem de estarem prontos, aí
             # iniciamos a partida
 
-            #estado_partida:
-            # 0: Aguardando conexão e confirmação
-            # 1: Acabou de começar
-            # 2:
             global players_ready
             if len(players) == players_ready:
-                global is_music_playing
                 if not is_music_playing:
                     # se todos os jogadores estão prontos.
                     play_music(conn)
@@ -91,7 +86,7 @@ def start_game():
 
         print('Aguardando conexões dos jogadores...')
 
-        while True:
+        while True:#TODO: impedir novas conn enquanto uma partida está acontecendo
             conn, addr = server_socket.accept()
             threading.Thread(target=handle_client, args=(conn,)).start()  # Inicia uma nova thread para cada jogador
 
