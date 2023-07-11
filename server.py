@@ -64,15 +64,17 @@ def handle_client(conn):
                         curr_turn += 1
 
                     play_music(conn)
+                    print('Sending play_music command to ', conn.getpeername())
                     is_music_playing = True
                 else:
                     #todo: a música já está tocando. Testa se é hora de parar a música para mandar o comando de parada
                     pass
             else:
                 #Jogadores não estão todos prontos ainda. Recupera o que o player atual quer fazer
-                data = conn.recv(1024).decode()
                 if not is_this_player_ready:
+                    data = conn.recv(1024).decode()
                     if not data:
+                        print("not data. Saindo da thread")
                         break#todo: continua aqui essa lógica do if com break?
                     is_ready = str(data)
                     if is_ready == constants.READY:
