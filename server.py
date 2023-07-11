@@ -110,8 +110,8 @@ def manage_game():
             break
 
     global chairs
-    for i in range(0, players_ready):#tem sempre (numJogadores - 1) cadeiras. Aqui colocamos o tamanho até numJogadores e no while, retiramos 1
-        chairs.append('x')
+    chairs = ['x'] * (players_ready -1)
+    #tem sempre (numJogadores - 1) cadeiras. Aqui colocamos o tamanho até numJogadores e no while, retiramos 1
     global music_stopped
     #depois que começar, para cada turno:
     while True:
@@ -120,7 +120,8 @@ def manage_game():
 
         music_stopped = False
         #Configura cadeiras disponíveis
-        chairs.pop()
+        if chairs:
+            chairs.pop()
 
         # recuperar um tempo, esperar,  mandar o comando de parada
         time_to_wait = random.randint(5, 15)
