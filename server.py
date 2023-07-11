@@ -29,6 +29,8 @@ lock = threading.Lock()  # Lock para garantir acesso exclusivo à lista de jogad
 time_to_stop = None
 is_game_on = False
 curr_turn = 0
+music_stopped = True
+chairs = []
 
 
 def play_music(conn):
@@ -66,6 +68,13 @@ def handle_client(conn):
                     print('Sending play_music command to ', conn.getpeername())
                     is_music_playing = True
                 else:
+                    #Música está tocando. Quando parar, vamos enviar para o jogador as cadeiras disponíveis e esperar input do jogador
+                    #Cada cliente vai ter a lista de cadeiras. A gente só envia atualizações. Tipo: cadeira x agora etá indisponível
+                    if music_stopped:
+                        #todo: aqui mandamos: teremos x cadeiras nessa rodada.
+                        conn.sendall(("QTD_CADEIRAS=" + str(len(chairs))).encode())
+                        data = conn.recv(1024).decode() #todo: fallta a lógica por parte do cliente
+
                     #todo: a música já está tocando. Testa se é hora de parar a música para mandar o comando de parada
                     pass
             else:
@@ -99,11 +108,19 @@ def manage_game():
     while True:
         if is_game_on:
             break
-    #depois que começar, para cada turno:
 
+    global chairs
+    for i in range(0, players_ready):#tem sempre (numJogadores - 1) cadeiras. Aqui colocamos o tamanho até numJogadores e no while, retiramos 1
+        chairs.append('x')
+    global music_stopped
+    #depois que começar, para cada turno:
     while True:
         while _curr_turn == curr_turn: #o turno não fui atualizado ainda
             _curr_turn = curr_turn
+
+        music_stopped = False
+        #Configura cadeiras disponíveis
+        chairs.pop()
 
         # recuperar um tempo, esperar,  mandar o comando de parada
         time_to_wait = random.randint(5, 15)
@@ -112,6 +129,7 @@ def manage_game():
         # manda comando de parada da música para todos os jogadores
         for p in players:
             stop_music(p)
+        music_stopped = True
 
 
 def start_game():
