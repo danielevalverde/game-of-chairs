@@ -16,7 +16,8 @@
 
 import socket
 import threading
-
+import time
+import random
 import constants
 
 HOST = '127.0.0.1'
@@ -26,6 +27,9 @@ players = []  # Lista de jogadores conectados
 players_ready = 0
 lock = threading.Lock()  # Lock para garantir acesso exclusivo à lista de jogadores
 number = 42 #TODO: remover
+time_to_stop = None
+is_game_on = False
+curr_turn = 0
 
 
 def play_music(conn):
@@ -51,6 +55,14 @@ def handle_client(conn):
             if len(players) == players_ready:
                 if not is_music_playing:
                     # se todos os jogadores estão prontos.
+                    #todo: setar o tempo de play
+
+                    global is_game_on
+                    if not is_game_on:
+                        is_game_on = True
+                        global curr_turn
+                        curr_turn += 1
+
                     play_music(conn)
                     is_music_playing = True
                 else:
@@ -78,8 +90,31 @@ def handle_client(conn):
         conn.close()
         print('Jogador desconectado:', conn.getpeername())
 
+def manage_game():
+    global curr_turn
+    _curr_turn = curr_turn
+
+    #espera o jogo começar.
+    while True:
+        if is_game_on:
+            break
+    #depois que começar, para cada turno:
+
+    while True:
+        while _curr_turn == curr_turn: #o turno não fui atualizado ainda
+            _curr_turn = curr_turn
+
+        # recuperar um tempo, esperar,  mandar o comando de parada
+        time_to_wait = random.randint(5, 15)
+        print("Waiting " + str(time_to_wait))
+        time.sleep(time_to_wait)
+        # manda comando de parada da música para todos os jogadores
+        for p in players:
+            stop_music(p)
+
 
 def start_game():
+    threading.Thread(target=manage_game, args=()).start()  # Inicia uma nova thread para gerenciar as partidas
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((HOST, PORT))
         server_socket.listen()
