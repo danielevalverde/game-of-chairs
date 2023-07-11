@@ -26,7 +26,6 @@ PORT = 5556
 players = []  # Lista de jogadores conectados
 players_ready = 0
 lock = threading.Lock()  # Lock para garantir acesso exclusivo à lista de jogadores
-number = 42 #TODO: remover
 time_to_stop = None
 is_game_on = False
 curr_turn = 0

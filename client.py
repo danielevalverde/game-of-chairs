@@ -107,16 +107,10 @@ def play_game():
             if response == constants.PLAY_MUSIC:
                 print("Tocando música")
                 sound_thread_pos = play_music()
-                # # espera comando de parada
-                # command = client_socket.recv(1024).decode()
-                # if command == constants.STOP_MUSIC:
-                #     print("Parando música")
-                #     stop_music(sound_thread_pos)
-                # agora é hora das cadeiras
             elif response == constants.STOP_MUSIC:
                 print("Parando música")
                 stop_music(sound_thread_pos)
-                # agora é hora das cadeiras
+                #TODO: agora é hora das cadeiras
             else:
                 print("Unexpected server message: " + response)
 
