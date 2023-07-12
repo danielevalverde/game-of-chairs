@@ -24,6 +24,7 @@ import queue
 # chairs = queue.Queue()
 
 HOST = '127.0.0.1'
+# HOST = '192.168.0.7'
 PORT = 5556
 
 players = []  # Lista de jogadores conectados
@@ -31,12 +32,17 @@ players_ready = 0
 players_playing = 0
 players_lock = threading.Lock()  # Lock para garantir acesso exclusivo à lista de jogadores
 chairs_lock = threading.Lock()
+config_lock = threading.Lock()
+stop_config_lock = threading.Lock()
+players_ready_lock = threading.Lock()
 time_to_stop = None
 is_game_on = False
 curr_turn = 1
 music_should_stop = False
 chairs = []
 music_stop_event = threading.Event()
+old_turn = -1
+old_stop_config_turn = -1
 
 
 def play_music(conn):
@@ -46,6 +52,54 @@ def play_music(conn):
 def stop_music(conn):
     conn.sendall(constants.STOP_MUSIC.encode())
 
+def configura_turno(turn):
+    with config_lock:
+        global old_turn
+        if turn == old_turn:
+            return
+        old_turn = turn
+        # Configura cadeiras disponíveis
+        global chairs
+        chairs = []
+        chairs = ['-'] * get_players_ready()
+        music_stop_event.clear()
+        if chairs:
+            chairs.pop()
+            print("removida uma cadeira")
+        if not chairs:
+            print("Nenhuma cadeira. Fim do Jogo")
+
+def config_stop_music(turn):
+    with stop_config_lock:
+        global old_stop_config_turn
+        if turn == old_stop_config_turn:
+            return
+        old_stop_config_turn = turn
+
+        time_to_wait = random.randint(5, 10)
+        print("Waiting " + str(time_to_wait))
+        time.sleep(time_to_wait)
+        # manda comando de parada da música para todos os jogadores
+        print("Please just stop the music")
+        # music_should_stop = True
+        music_stop_event.set()
+
+
+def decr_players_ready():
+    with players_ready_lock:
+        global players_ready
+        players_ready -= 1
+        return players_ready
+
+def incr_players_ready():
+    with players_ready_lock:
+        global players_ready
+        players_ready += 1
+        return players_ready
+
+def get_players_ready():
+    with players_ready_lock:
+        return players_ready
 
 def handle_client(conn, music_stop_event):
     try:
@@ -53,7 +107,6 @@ def handle_client(conn, music_stop_event):
             players.append(conn)  # Adiciona o novo jogador à lista de jogadores
         print('Novo jogador conectado:', conn.getpeername())
 
-        global players_ready
         global players_playing
         global curr_turn
         global is_game_on
@@ -64,18 +117,21 @@ def handle_client(conn, music_stop_event):
             is_ready = str(data)
             if is_ready == constants.READY:
                 # cliente pronto para começar.
-                players_ready += 1
+                incr_players_ready()
                 break
         print("Jogador atual está pronto")
 
         # Espera todos os jogadores estarem prontos
-        while len(players) != players_ready:
+        while len(players) != get_players_ready():
             pass
         print("Todos os jogadores estão prontos")
 
         while True:
-            if players_ready == 1:
-            # if len(chairs) == 0:
+            # Aqui estamos no fim de um turno (ou começo do primeiro)
+            configura_turno(curr_turn)
+
+            if get_players_ready() == 1:
+                # if len(chairs) == 0:
                 print("O jogador " + str(conn.getpeername()) + " venceu!")
                 conn.sendall(constants.YOU_WON.encode())
                 break
@@ -90,6 +146,8 @@ def handle_client(conn, music_stop_event):
             print('Sending play_music command to ', conn.getpeername())
             is_game_on = True
             print("música começou")
+
+            config_stop_music(curr_turn)
 
             # Espera a música parar
             while not music_stop_event.is_set():
@@ -132,9 +190,9 @@ def handle_client(conn, music_stop_event):
             if response != constants.SUCCESS:
                 # mata a conexão (no finally)
                 # conn.sendall(constants.YOU_LOST.encode())
-                players_ready -= 1
+                decr_players_ready()
                 break
-            print("restam " + str(players_ready) + " jogadores")
+            print("restam " + str(get_players_ready()) + " jogadores")
 
     finally:
         print('Jogador desconectado:', conn.getpeername())
@@ -160,27 +218,27 @@ def manage_game(music_stop_event):
     while True:
         last_turn = curr_turn
         # Aqui estamos no fim de um turno (ou começo do primeiro)
-        chairs = []
-        chairs = ['-'] * players_ready
-        print("players ready: ", players_ready)
-        # music_should_stop = False
-        music_stop_event.clear()
-        # Configura cadeiras disponíveis
-        if chairs:
-            chairs.pop()
-            print("removida uma cadeira")
-        if not chairs:
-            print("Nenhuma cadeira. Fim do Jogo")
-            break
+        # chairs = []
+        # chairs = ['-'] * players_ready
+        # print("players ready: ", players_ready)
+        # # music_should_stop = False
+        # music_stop_event.clear()
+        # # Configura cadeiras disponíveis
+        # if chairs:
+        #     chairs.pop()
+        #     print("removida uma cadeira")
+        # if not chairs:
+        #     print("Nenhuma cadeira. Fim do Jogo")
+        #     break
 
         # recuperar um tempo, esperar,  mandar o comando de parada
-        time_to_wait = random.randint(5, 10)
-        print("Waiting " + str(time_to_wait))
-        time.sleep(time_to_wait)
-        # manda comando de parada da música para todos os jogadores
-        print("Please just stop the music")
-        # music_should_stop = True
-        music_stop_event.set()
+        # time_to_wait = random.randint(5, 10)
+        # print("Waiting " + str(time_to_wait))
+        # time.sleep(time_to_wait)
+        # # manda comando de parada da música para todos os jogadores
+        # print("Please just stop the music")
+        # # music_should_stop = True
+        # music_stop_event.set()
         while curr_turn == last_turn: pass
 
 
@@ -195,8 +253,8 @@ def espera_novo_turno(_curr_turn, curr_turn):
 
 
 def start_game():
-    threading.Thread(target=manage_game,
-                     args=(music_stop_event,)).start()  # Inicia uma nova thread para gerenciar as partidas
+    #threading.Thread(target=manage_game,
+    #                 args=(music_stop_event,)).start()  # Inicia uma nova thread para gerenciar as partidas
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((HOST, PORT))
         server_socket.listen()
