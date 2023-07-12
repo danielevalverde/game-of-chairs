@@ -76,8 +76,14 @@ def handle_client(conn, music_stop_event):
         print("Todos os jogadores estão prontos")
 
         while True:
-            print("Começando o turno ", curr_turn)
-            conn.sendall(constants.START_TURN.encode())
+            if players_ready == 1:
+            # if len(chairs) == 0:
+                print("O jogador " + str(conn.getpeername()) + " venceu!")
+                conn.sendall(constants.YOU_WON.encode())
+                break
+            else:
+                print("Começando o turno ", curr_turn)
+                conn.sendall(constants.START_TURN.encode())
 
 
             # Espera a música começar
@@ -134,10 +140,10 @@ def handle_client(conn, music_stop_event):
                 break
             print("restam " + str(players_ready) + " jogadores")
 
-            if players_ready == 1:
-            # if len(chairs) == 0:
-                print("O jogador " + conn.getpeername() + " venceu!")
-                conn.sendall(constants.YOU_WON.encode())
+            # if players_ready == 1:
+            # # if len(chairs) == 0:
+            #     print("O jogador " + str(conn.getpeername()) + " venceu!")
+            #     conn.sendall(constants.YOU_WON.encode())
         # while True:
         #     # Espera todos os jogadores estarem prontos. Quando eles mandarem mensagem de estarem prontos, aí
         #     # iniciamos a partida
