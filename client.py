@@ -29,6 +29,8 @@ def play_music_thread():
 
 
 def play_music():
+    global stop_play_thread
+    stop_play_thread = False
     sound_thread = threading.Thread(target=play_music_thread, args=())
     sound_thread.start()
     # sound_threads.append(sound_thread)
