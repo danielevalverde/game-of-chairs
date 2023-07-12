@@ -31,6 +31,7 @@ is_game_on = False
 curr_turn = 0
 music_should_stop = False
 chairs = []
+music_stop_event = threading.Event()
 
 
 def play_music(conn):
@@ -41,7 +42,7 @@ def stop_music(conn):
     conn.sendall(constants.STOP_MUSIC.encode())
 
 
-def handle_client(conn):
+def handle_client(conn, music_stop_event):
     try:
         with lock:
             players.append(conn)  # Adiciona o novo jogador à lista de jogadores
@@ -56,7 +57,7 @@ def handle_client(conn):
             if len(players) == players_ready:
                 if not is_music_playing:
                     # se todos os jogadores estão prontos.
-                    #todo: setar o tempo de play
+                    # todo: setar o tempo de play
 
                     global is_game_on
                     if not is_game_on:
@@ -68,65 +69,70 @@ def handle_client(conn):
                     print('Sending play_music command to ', conn.getpeername())
                     is_music_playing = True
                 else:
-                    #Música está tocando. Quando parar, vamos enviar para o jogador as cadeiras disponíveis e esperar input do jogador
-                    #Cada cliente vai ter a lista de cadeiras. A gente só envia atualizações. Tipo: cadeira x agora etá indisponível
-                    if music_should_stop:
-                        #Aqui vai ser onde paramos a música e tals
+                    # Música está tocando. Quando parar, vamos enviar para o jogador as cadeiras disponíveis e esperar input do jogador
+                    # Cada cliente vai ter a lista de cadeiras. A gente só envia atualizações. Tipo: cadeira x agora etá indisponível
+                    # global music_should_stop
+                    # if music_should_stop:
+                    if music_stop_event.is_set():
+                        # Aqui vai ser onde paramos a música e tals
                         stop_music(conn)
 
-                        #todo: aqui mandamos: teremos x cadeiras nessa rodada.
+                        # todo: aqui mandamos: teremos x cadeiras nessa rodada.
                         conn.sendall(("QTD_CADEIRAS=" + str(len(chairs))).encode())
-                        #E recebemos o pedido do cliente com a cadeira que deseja
-                        #o seguinte vai estar num loop até o cliente conseguir uma cadeira ou morrer tentando
+                        # E recebemos o pedido do cliente com a cadeira que deseja
+                        # o seguinte vai estar num loop até o cliente conseguir uma cadeira ou morrer tentando
                         chosen_chair = conn.recv(1024).decode()
-                        print("Cliente ", conn.getpeername(), " escolheu ", chosen_chair, ". Veriicando disponibilidade...")
+                        print("Cliente ", conn.getpeername(), " escolheu ", chosen_chair,
+                              ". Veriicando disponibilidade...")
 
-                    #todo: a música já está tocando. Testa se é hora de parar a música para mandar o comando de parada
+                    # todo: a música já está tocando. Testa se é hora de parar a música para mandar o comando de parada
 
             else:
-                #Jogadores não estão todos prontos ainda. Recupera o que o player atual quer fazer
+                # Jogadores não estão todos prontos ainda. Recupera o que o player atual quer fazer
                 if not is_this_player_ready:
                     data = conn.recv(1024).decode()
                     if not data:
                         print("not data. Saindo da thread")
-                        break#todo: continua aqui essa lógica do if com break?
+                        break  # todo: continua aqui essa lógica do if com break?
                     is_ready = str(data)
                     if is_ready == constants.READY:
                         # cliente pronto para começar.
                         players_ready += 1
                         is_this_player_ready = True
                 else:
-                    #se o jogador já está pronto
+                    # se o jogador já está pronto
                     pass
 
-#TODO: precisamos coordenar os jogadores e quando eles mandam ou não mensagem...
+    # TODO: precisamos coordenar os jogadores e quando eles mandam ou não mensagem...
     finally:
         with lock:
             players.remove(conn)  # Remove o jogador da lista de jogadores
         conn.close()
         print('Jogador desconectado:', conn.getpeername())
 
-def manage_game():
+
+def manage_game(music_stop_event):
     global curr_turn
     _curr_turn = curr_turn
 
-    #espera o jogo começar.
+    # espera o jogo começar.
     while True:
         if is_game_on:
             break
 
     global chairs
-    chairs = ['x'] * (players_ready -1)
-    #tem sempre (numJogadores - 1) cadeiras. Aqui colocamos o tamanho até numJogadores e no while, retiramos 1
-    global music_should_stop
-    #depois que começar, para cada turno:
+    chairs = ['x'] * (players_ready - 1)
+    # tem sempre (numJogadores - 1) cadeiras. Aqui colocamos o tamanho até numJogadores e no while, retiramos 1
+    # global music_should_stop
+    # depois que começar, para cada turno:
     while True:
-        while _curr_turn == curr_turn: #o turno não fui atualizado ainda
+        while _curr_turn == curr_turn:  # o turno não fui atualizado ainda
             _curr_turn = curr_turn
         print("Turno: ", curr_turn)
 
-        music_should_stop = False
-        #Configura cadeiras disponíveis
+        # music_should_stop = False
+        music_stop_event.clear()
+        # Configura cadeiras disponíveis
         if chairs:
             chairs.pop()
             print("removida uma cadeira")
@@ -139,20 +145,23 @@ def manage_game():
         # for p in players:
         #     stop_music
         print("Please just stop the music")
-        music_should_stop = True
+        # music_should_stop = True
+        music_stop_event.set()
 
 
 def start_game():
-    threading.Thread(target=manage_game, args=()).start()  # Inicia uma nova thread para gerenciar as partidas
+    threading.Thread(target=manage_game,
+                     args=(music_stop_event,)).start()  # Inicia uma nova thread para gerenciar as partidas
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((HOST, PORT))
         server_socket.listen()
 
         print('Aguardando conexões dos jogadores...')
 
-        while True:#TODO: impedir novas conn enquanto uma partida está acontecendo
+        while True:  # TODO: impedir novas conn enquanto uma partida está acontecendo
             conn, addr = server_socket.accept()
-            threading.Thread(target=handle_client, args=(conn,)).start()  # Inicia uma nova thread para cada jogador
+            threading.Thread(target=handle_client,
+                             args=(conn, music_stop_event)).start()  # Inicia uma nova thread para cada jogador
 
 
 if __name__ == '__main__':

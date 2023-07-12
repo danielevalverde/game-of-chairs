@@ -15,9 +15,11 @@ chairs_available = []
 sound_threads = []
 stop_play_thread = False
 def play_music_thread():
+    cont = 1
     while not stop_play_thread:
-        print("...")
+        print("...", cont)
         sleep(1)
+        cont += 1
     # try:
     #     playsound('music/ciranda-cirandinha.mp3')
     # except:
@@ -114,7 +116,7 @@ def play_game():
                 response = client_socket.recv(1024).decode()
                 if response.startswith("QTD_CADEIRAS="):
 
-                    #Conigura as cadeiras
+                    #Configura as cadeiras
                     num_cadeiras = int(response.split("=")[1])
                     print("Número de cadeiras disponíveis:", num_cadeiras)
                     global chairs_available
