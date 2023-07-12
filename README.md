@@ -13,6 +13,7 @@ Para implementar o jogo de Dança das Cadeiras de forma distribuída será permi
 O servidor será responsável por coordenar o jogo, reproduzir a música, controlar o tempo e gerenciar as cadeiras. Irá manter um registro dos jogadores conectados, monitorar constantemente o estado do jogo e verificar se os eventos estão ocorrendo conforme o esperado.
 O servidor também será responsável por receber e processar as ações dos jogadores, como solicitações para sentar ou sair das cadeiras.
 O servidor deve suportar conexões simultâneas de vários clientes para que possa ocorrer a participação de múltiplos jogadores. 
+Fluxo do código:
 ```
 - O servidor usa a biblioteca socket para estabelecer conexões de rede e receber dados dos clientes.
 - A variável HOST define o endereço IP do servidor e a variável PORT define o número da porta em que o servidor estará ouvindo.
@@ -31,7 +32,20 @@ Cada jogador é representado por um cliente conectado ao servidor.
 O cliente exibe a interface gráfica do jogo para o jogador, mostrando a posição das cadeiras, a música em reprodução e o estado atual do jogo.
 Os clientes enviam ações para o servidor, como solicitações para sentar ou sair das cadeiras.
 Eles também recebem atualizações do servidor, como alterações nas cadeiras disponíveis e notificações sobre a eliminação de jogadores.
-
+Fluxo do código:
+````
+O cliente usa a biblioteca socket para estabelecer uma conexão de rede com o servidor.
+A variável HOST define o endereço IP do servidor e a variável PORT define o número da porta em que o servidor está ouvindo.
+A função play_music_thread() é uma thread separada que simula reprodção da música do jogo em segundo plano.
+A função play_music() inicia a reprodução da música chamando a função play_music_thread() em uma nova thread e retorna a posição dessa thread na lista sound_threads.
+A função stop_music() para a reprodução da música com base na posição da thread na lista sound_threads.
+A função play_game() é a principal função do cliente. Ela estabelece uma conexão com o servidor e interage com ele de acordo com os comandos recebidos.
+O cliente aguarda o comando para iniciar o jogo e responde se está pronto ou não.
+O cliente recebe comandos do servidor para tocar ou parar a música e executa as ações correspondentes chamando as funções play_music() e stop_music().
+O cliente recebe a quantidade de cadeiras disponíveis do servidor e solicita ao jogador que escolha uma cadeira. Em seguida, envia o número da cadeira escolhida para o servidor.
+O cliente recebe as respostas do servidor indicando se a escolha da cadeira foi bem-sucedida ou não e exibe mensagens apropriadas.
+O processo acima se repete até o jogador vencer o jogo ou perder.
+````
 ### Etapas do jogo:
 
 Os jogadores iniciam o cliente e se conectam ao servidor.
