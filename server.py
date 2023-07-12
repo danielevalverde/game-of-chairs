@@ -77,6 +77,7 @@ def handle_client(conn, music_stop_event):
                     # global music_should_stop
                     # if music_should_stop:
                     if music_stop_event.is_set():
+                        is_music_playing = False
                         # Aqui vai ser onde paramos a música e tals
                         stop_music(conn)
 
@@ -84,9 +85,18 @@ def handle_client(conn, music_stop_event):
                         conn.sendall(("QTD_CADEIRAS=" + str(len(chairs))).encode())
                         # E recebemos o pedido do cliente com a cadeira que deseja
                         # o seguinte vai estar num loop até o cliente conseguir uma cadeira ou morrer tentando
-                        chosen_chair = conn.recv(1024).decode()
-                        print("Cliente ", conn.getpeername(), " escolheu ", chosen_chair,
-                              ". Veriicando disponibilidade...")
+                        resp = conn.recv(1024).decode()
+                        chosen_chair = int(resp)
+                        if 1 > chosen_chair or chosen_chair > len(chairs):
+                            print("tente novamente. cadeira inválida")
+                        else:
+                            #TODO: fazer lock!!
+                            if chairs[chosen_chair - 1] == '-':
+                                print("cliente", conn.getpeername(), " conseguiu a cadeira. invalida para os outros")
+                                chairs[chosen_chair - 1] = conn.getpeername()
+                            else:
+                                print("Cadeira já foi escolhida. Procure outra.")
+
 
                     # todo: a música já está tocando. Testa se é hora de parar a música para mandar o comando de parada
 
@@ -130,9 +140,8 @@ def manage_game(music_stop_event):
     # global music_should_stop
     # depois que começar, para cada turno:
     while True:
-        while _curr_turn == curr_turn:  # o turno não fui atualizado ainda
-            _curr_turn = curr_turn
-        print("Turno: ", curr_turn)
+        espera_novo_turno(_curr_turn, curr_turn)
+
         chairs = ['-'] * players_ready #todo: temos que desconectar os clientes quando perdem
         print("playes ready: ", players_ready)
         # music_should_stop = False
@@ -152,6 +161,15 @@ def manage_game(music_stop_event):
         print("Please just stop the music")
         # music_should_stop = True
         music_stop_event.set()
+
+
+def espera_novo_turno(_curr_turn, curr_turn):
+    old_turn = curr_turn
+    # while True:
+    while _curr_turn == curr_turn:  # o turno não fui atualizado ainda
+        # _curr_turn = curr_turn
+        pass
+    print("Turno: ", curr_turn)
 
 
 def start_game():
