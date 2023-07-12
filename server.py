@@ -134,22 +134,27 @@ def manage_game(music_stop_event):
             break
 
     global chairs
-    chairs = ['-'] * players_ready
+    # chairs = ['-'] * players_ready
     # for i in range (0, players)
     # tem sempre (numJogadores - 1) cadeiras. Aqui colocamos o tamanho até numJogadores e no while, retiramos 1
     # global music_should_stop
     # depois que começar, para cada turno:
     while True:
-        espera_novo_turno(_curr_turn, curr_turn)
+        #espera_novo_turno(_curr_turn, curr_turn)
+        #se algum elemento dentro de chairs estiver com '-', não é fim de turno
+        while chairs.__contains__('-'): pass
+        #Aqui estamos no fim de um turno (ou começo do primeiro)
 
         chairs = ['-'] * players_ready #todo: temos que desconectar os clientes quando perdem
-        print("playes ready: ", players_ready)
+        print("players ready: ", players_ready)
         # music_should_stop = False
         music_stop_event.clear()
         # Configura cadeiras disponíveis
         if chairs:
             chairs.pop()
             print("removida uma cadeira")
+        else:
+            print("Nenhuma cadeira. Fim do Jogo")#TODO: dizer quem é o vencedor
 
         # recuperar um tempo, esperar,  mandar o comando de parada
         time_to_wait = random.randint(5, 10)
