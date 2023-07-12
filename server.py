@@ -133,6 +133,11 @@ def handle_client(conn, music_stop_event):
                 players_ready -= 1
                 break
             print("restam " + str(players_ready) + " jogadores")
+
+            if players_ready == 1:
+            # if len(chairs) == 0:
+                print("O jogador " + conn.getpeername() + " venceu!")
+                conn.sendall(constants.YOU_WON.encode())
         # while True:
         #     # Espera todos os jogadores estarem prontos. Quando eles mandarem mensagem de estarem prontos, aí
         #     # iniciamos a partida

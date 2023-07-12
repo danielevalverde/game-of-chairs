@@ -112,6 +112,9 @@ def play_game():
             response = client_socket.recv(1024).decode()
             if response == constants.START_TURN:
                 print("Iniciando o turno")
+            elif response == constants.YOU_WON:
+                print("Parabéns, você venceu!")
+                break
 
             # Espera comando para tocar música
             response = client_socket.recv(1024).decode()
