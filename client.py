@@ -14,6 +14,8 @@ PORT_2 = -1
 chairs_available = []
 sound_threads = []
 stop_play_thread = False
+
+
 def play_music_thread():
     cont = 1
     while not stop_play_thread:
@@ -32,7 +34,7 @@ def play_music():
     # sound_threads.append(sound_thread)
     sound_threads.append(False)
     # return sound_threads.index(sound_thread)
-    return len(sound_threads)-1
+    return len(sound_threads) - 1
 
 
 def stop_music(sound_thread_pos):
@@ -61,6 +63,7 @@ def find_free_ports(start_port, end_port):
 
     return free_ports
 
+
 def play_game():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
         # global PORT_1
@@ -84,7 +87,7 @@ def play_game():
         #     except:
         #         pass
 
-        #TODO: o código abaixo deve ser descomentado
+        # TODO: o código abaixo deve ser descomentado
         global PORT
         while True:
             try:
@@ -103,51 +106,110 @@ def play_game():
             ready = input('Está pronto para iniciar jogo? s/n: ')
         sound_thread_pos = -1
         client_socket.sendall(constants.READY.encode())
+        perdeu = False
         while True:
+            # Espera comando de início de turno
             response = client_socket.recv(1024).decode()
-            # Agora eu testo se o comando é para esperar ou começar a música
+            if response == constants.START_TURN:
+                print("Iniciando o turno")
+
+            # Espera comando para tocar música
+            response = client_socket.recv(1024).decode()
             if response == constants.PLAY_MUSIC:
                 print("Tocando música")
                 sound_thread_pos = play_music()
-            elif response == constants.STOP_MUSIC:
+
+            # Espera comando para parar a música
+            response = client_socket.recv(1024).decode()
+            if response == constants.STOP_MUSIC:
                 print("Parando música")
                 stop_music(sound_thread_pos)
-                # Receber a quantidade de cadeiras disponíveis do servidor
-                response = client_socket.recv(1024).decode()
-                if response.startswith("QTD_CADEIRAS="):
 
-                    #Configura as cadeiras
-                    num_cadeiras = int(response.split("=")[1])
-                    print("Número de cadeiras disponíveis:", num_cadeiras)
-                    global chairs_available
-                    for i in range(0,num_cadeiras):
-                        chairs_available.append(i+1)
+            # Receber a quantidade de cadeiras disponíveis do servidor
+            response = client_socket.recv(1024).decode()
+            if response.startswith("QTD_CADEIRAS="):
+                # Configura as cadeiras
+                num_cadeiras = int(response.split("=")[1])
+                print("Número de cadeiras disponíveis:", num_cadeiras)
+                global chairs_available
+                chairs_available = []
+                for i in range(0, num_cadeiras):
+                    chairs_available.append(i + 1)
 
-                    #Conseguir a cadeira
-                    while True:
-                        # Solicitar ao jogador que escolha um número de cadeira:
-                        chosen_chair = input("Cadeiras disponíveis: {} \nEscolha uma cadeira (digite apenas o número): ".format(chairs_available))
-                        # Enviar o número da cadeira escolhida para o servidor
-                        client_socket.sendall(chosen_chair.encode())
-                        resp = client_socket.recv(1024).decode()
-                        if resp == constants.SUCCESS:
-                            print("Sucesso. Você conseguiu a cadeira")
-                            break
-                        elif resp == constants.ALREADY_IN_USE:
-                            print("Cadeira já em uso. Selecione uma outra")
-                        elif resp == constants.INVALID:
-                            print("Valor inválido")
-                        elif resp == constants.YOU_LOST:
-                            print("Você perdeu")
-                            break
-                        else:
-                            print("[3] Mensagem não esperada: " + response)
-
-
+            # Espera o jogador conseguir uma cadeira ou não haver cadeira disponível
+            while True:
+                # Solicitar ao jogador que escolha um número de cadeira:
+                chosen_chair = input(
+                    "Cadeiras disponíveis: {} \nEscolha uma cadeira (digite apenas o número): ".format(
+                        chairs_available))
+                # Enviar o número da cadeira escolhida para o servidor
+                client_socket.sendall(chosen_chair.encode())
+                try:
+                    resp = client_socket.recv(1024).decode()
+                except:
+                    pass
+                    print("Uma exception ocorreu")
+                    break
+                if resp == constants.SUCCESS:
+                    print("Sucesso. Você conseguiu a cadeira")
+                    break
+                elif resp == constants.ALREADY_IN_USE:
+                    print("Cadeira já em uso. Selecione uma outra")
+                elif resp == constants.INVALID:
+                    print("Valor inválido")
+                elif resp == constants.YOU_LOST:
+                    print("Você perdeu")
+                    perdeu = True
+                    break
                 else:
-                    print("[1] Mensagem não esperada: " + response)
-            else:
-                print("[2] Mensagem não esperada: " + response)
+                    print("[3] Mensagem não esperada: " + response)
+            if perdeu:
+                break
+        # while True:
+        #     response = client_socket.recv(1024).decode()
+        #     # Agora eu testo se o comando é para esperar ou começar a música
+        #     if response == constants.PLAY_MUSIC:
+        #         print("Tocando música")
+        #         sound_thread_pos = play_music()
+        #     elif response == constants.STOP_MUSIC:
+        #         print("Parando música")
+        #         stop_music(sound_thread_pos)
+        #         # Receber a quantidade de cadeiras disponíveis do servidor
+        #         response = client_socket.recv(1024).decode()
+        #         if response.startswith("QTD_CADEIRAS="):
+        #
+        #             #Configura as cadeiras
+        #             num_cadeiras = int(response.split("=")[1])
+        #             print("Número de cadeiras disponíveis:", num_cadeiras)
+        #             global chairs_available
+        #             for i in range(0,num_cadeiras):
+        #                 chairs_available.append(i+1)
+        #
+        #             #Conseguir a cadeira
+        #             while True:
+        #                 # Solicitar ao jogador que escolha um número de cadeira:
+        #                 chosen_chair = input("Cadeiras disponíveis: {} \nEscolha uma cadeira (digite apenas o número): ".format(chairs_available))
+        #                 # Enviar o número da cadeira escolhida para o servidor
+        #                 client_socket.sendall(chosen_chair.encode())
+        #                 resp = client_socket.recv(1024).decode()
+        #                 if resp == constants.SUCCESS:
+        #                     print("Sucesso. Você conseguiu a cadeira")
+        #                     break
+        #                 elif resp == constants.ALREADY_IN_USE:
+        #                     print("Cadeira já em uso. Selecione uma outra")
+        #                 elif resp == constants.INVALID:
+        #                     print("Valor inválido")
+        #                 elif resp == constants.YOU_LOST:
+        #                     print("Você perdeu")
+        #                     break
+        #                 else:
+        #                     print("[3] Mensagem não esperada: " + response)
+        #
+        #
+        #         else:
+        #             print("[1] Mensagem não esperada: " + response)
+        #     else:
+        #         print("[2] Mensagem não esperada: " + response)
 
 
 if __name__ == '__main__':
