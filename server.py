@@ -19,6 +19,9 @@ import threading
 import time
 import random
 import constants
+import queue
+
+# chairs = queue.Queue()
 
 HOST = '127.0.0.1'
 PORT = 5556
@@ -121,7 +124,8 @@ def manage_game(music_stop_event):
             break
 
     global chairs
-    chairs = ['x'] * (players_ready - 1)
+    chairs = ['-'] * players_ready
+    # for i in range (0, players)
     # tem sempre (numJogadores - 1) cadeiras. Aqui colocamos o tamanho até numJogadores e no while, retiramos 1
     # global music_should_stop
     # depois que começar, para cada turno:
@@ -129,7 +133,8 @@ def manage_game(music_stop_event):
         while _curr_turn == curr_turn:  # o turno não fui atualizado ainda
             _curr_turn = curr_turn
         print("Turno: ", curr_turn)
-
+        chairs = ['-'] * players_ready #todo: temos que desconectar os clientes quando perdem
+        print("playes ready: ", players_ready)
         # music_should_stop = False
         music_stop_event.clear()
         # Configura cadeiras disponíveis
