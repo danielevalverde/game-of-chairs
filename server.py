@@ -88,14 +88,19 @@ def handle_client(conn, music_stop_event):
                         resp = conn.recv(1024).decode()
                         chosen_chair = int(resp)
                         if 1 > chosen_chair or chosen_chair > len(chairs):
-                            print("tente novamente. cadeira inválida")
+                            # print("tente novamente. cadeira inválida")
+                            response = constants.INVALID
                         else:
                             #TODO: fazer lock!!
                             if chairs[chosen_chair - 1] == '-':
-                                print("cliente", conn.getpeername(), " conseguiu a cadeira. invalida para os outros")
+                                # print("cliente", conn.getpeername(), " conseguiu a cadeira. invalida para os outros")
                                 chairs[chosen_chair - 1] = conn.getpeername()
+                                response = constants.SUCCESS
                             else:
-                                print("Cadeira já foi escolhida. Procure outra.")
+                                # print("Cadeira já foi escolhida. Procure outra.")
+                                response = constants.ALREADY_IN_USE
+
+                        conn.sendall(response.encode())
 
 
                     # todo: a música já está tocando. Testa se é hora de parar a música para mandar o comando de parada

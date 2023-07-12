@@ -123,11 +123,25 @@ def play_game():
                     for i in range(0,num_cadeiras):
                         chairs_available.append(i+1)
 
-                    # Solicitar ao jogador que escolha um número de cadeira:
-                    chosen_chair = input("Cadeiras disponíveis: {} \nEscolha uma cadeira (digite apenas o número): ".format(chairs_available))
-                    # Enviar o número da cadeira escolhida para o servidor
-                    client_socket.sendall(chosen_chair.encode())
-
+                    #Conseguir a cadeira
+                    while True:
+                        # Solicitar ao jogador que escolha um número de cadeira:
+                        chosen_chair = input("Cadeiras disponíveis: {} \nEscolha uma cadeira (digite apenas o número): ".format(chairs_available))
+                        # Enviar o número da cadeira escolhida para o servidor
+                        client_socket.sendall(chosen_chair.encode())
+                        resp = client_socket.recv(1024).decode()
+                        if resp == constants.SUCCESS:
+                            print("Sucesso. Você conseguiu a cadeira")
+                            break
+                        elif resp == constants.ALREADY_IN_USE:
+                            print("Cadeira já em uso. Selecione uma outra")
+                        elif resp == constants.INVALID:
+                            print("Invalid value provided")
+                        elif resp == constants.YOU_LOST:
+                            print("Você perdeu")
+                            break
+                        else:
+                            print("[3] Unexpected server message: " + response)
 
                     # valid_choice = False
                     # while not valid_choice:
