@@ -29,7 +29,8 @@ PORT = 5556
 players = []  # Lista de jogadores conectados
 players_ready = 0
 players_playing = 0
-lock = threading.Lock()  # Lock para garantir acesso exclusivo à lista de jogadores
+players_lock = threading.Lock()  # Lock para garantir acesso exclusivo à lista de jogadores
+chairs_lock = threading.Lock()
 time_to_stop = None
 is_game_on = False
 curr_turn = 1
@@ -48,7 +49,7 @@ def stop_music(conn):
 
 def handle_client(conn, music_stop_event):
     try:
-        with lock:
+        with players_lock:
             players.append(conn)  # Adiciona o novo jogador à lista de jogadores
         print('Novo jogador conectado:', conn.getpeername())
         is_this_player_ready = False
@@ -111,16 +112,16 @@ def handle_client(conn, music_stop_event):
                     # print("tente novamente. cadeira inválida")
                     response = constants.INVALID
                 else:
-                    # TODO: fazer lock!!
-                    if chairs[chosen_chair - 1] == '-':
-                        # print("cliente", conn.getpeername(), " conseguiu a cadeira. invalida para os outros")
-                        chairs[chosen_chair - 1] = conn.getpeername()
-                        response = constants.SUCCESS
-                    elif chairs.__contains__('-'):
-                        # print("Cadeira já foi escolhida. Procure outra.")
-                        response = constants.ALREADY_IN_USE
-                    else:
-                        response = constants.YOU_LOST
+                    with chairs_lock:
+                        if chairs[chosen_chair - 1] == '-':
+                            # print("cliente", conn.getpeername(), " conseguiu a cadeira. invalida para os outros")
+                            chairs[chosen_chair - 1] = conn.getpeername()
+                            response = constants.SUCCESS
+                        elif chairs.__contains__('-'):
+                            # print("Cadeira já foi escolhida. Procure outra.")
+                            response = constants.ALREADY_IN_USE
+                        else:
+                            response = constants.YOU_LOST
 
                 conn.sendall(response.encode())
             print("chairs: ", chairs)
@@ -221,7 +222,7 @@ def handle_client(conn, music_stop_event):
     # TODO: precisamos coordenar os jogadores e quando eles mandam ou não mensagem...
     finally:
         print('Jogador desconectado:', conn.getpeername())
-        with lock:
+        with players_lock:
             players.remove(conn)  # Remove o jogador da lista de jogadores
         conn.close()
 
