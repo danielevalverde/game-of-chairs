@@ -23,9 +23,10 @@ import queue
 
 # chairs = queue.Queue()
 
-HOST = '127.0.0.1'
+# HOST = '127.0.0.1'
+HOST = 'localhost'
 # HOST = '192.168.0.7'
-PORT = 5556
+PORT = 5502
 
 players = []  # Lista de jogadores conectados
 players_ready = 0
