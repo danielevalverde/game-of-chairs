@@ -29,7 +29,7 @@ lock = threading.Lock()  # Lock para garantir acesso exclusivo à lista de jogad
 time_to_stop = None
 is_game_on = False
 curr_turn = 0
-music_stopped = True
+music_should_stop = False
 chairs = []
 
 
@@ -70,13 +70,19 @@ def handle_client(conn):
                 else:
                     #Música está tocando. Quando parar, vamos enviar para o jogador as cadeiras disponíveis e esperar input do jogador
                     #Cada cliente vai ter a lista de cadeiras. A gente só envia atualizações. Tipo: cadeira x agora etá indisponível
-                    if music_stopped:
+                    if music_should_stop:
+                        #Aqui vai ser onde paramos a música e tals
+                        stop_music(conn)
+
                         #todo: aqui mandamos: teremos x cadeiras nessa rodada.
                         conn.sendall(("QTD_CADEIRAS=" + str(len(chairs))).encode())
-                        data = conn.recv(1024).decode() #todo: fallta a lógica por parte do cliente
+                        #E recebemos o pedido do cliente com a cadeira que deseja
+                        #o seguinte vai estar num loop até o cliente conseguir uma cadeira ou morrer tentando
+                        chosen_chair = conn.recv(1024).decode()
+                        print("Cliente ", conn.getpeername(), " escolheu ", chosen_chair, ". Veriicando disponibilidade...")
 
                     #todo: a música já está tocando. Testa se é hora de parar a música para mandar o comando de parada
-                    pass
+
             else:
                 #Jogadores não estão todos prontos ainda. Recupera o que o player atual quer fazer
                 if not is_this_player_ready:
@@ -112,25 +118,28 @@ def manage_game():
     global chairs
     chairs = ['x'] * (players_ready -1)
     #tem sempre (numJogadores - 1) cadeiras. Aqui colocamos o tamanho até numJogadores e no while, retiramos 1
-    global music_stopped
+    global music_should_stop
     #depois que começar, para cada turno:
     while True:
         while _curr_turn == curr_turn: #o turno não fui atualizado ainda
             _curr_turn = curr_turn
+        print("Turno: ", curr_turn)
 
-        music_stopped = False
+        music_should_stop = False
         #Configura cadeiras disponíveis
         if chairs:
             chairs.pop()
+            print("removida uma cadeira")
 
         # recuperar um tempo, esperar,  mandar o comando de parada
-        time_to_wait = random.randint(5, 15)
+        time_to_wait = random.randint(5, 10)
         print("Waiting " + str(time_to_wait))
         time.sleep(time_to_wait)
         # manda comando de parada da música para todos os jogadores
-        for p in players:
-            stop_music(p)
-        music_stopped = True
+        # for p in players:
+        #     stop_music
+        print("Please just stop the music")
+        music_should_stop = True
 
 
 def start_game():

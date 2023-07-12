@@ -11,7 +11,7 @@ HOST = '127.0.0.1'
 PORT = 5556
 PORT_1 = -1
 PORT_2 = -1
-
+chairs_available = []
 sound_threads = []
 stop_play_thread = False
 def play_music_thread():
@@ -110,9 +110,37 @@ def play_game():
             elif response == constants.STOP_MUSIC:
                 print("Parando música")
                 stop_music(sound_thread_pos)
-                #TODO: agora é hora das cadeiras
+                # Receber a quantidade de cadeiras disponíveis do servidor
+                response = client_socket.recv(1024).decode()
+                if response.startswith("QTD_CADEIRAS="):
+
+                    #Conigura as cadeiras
+                    num_cadeiras = int(response.split("=")[1])
+                    print("Número de cadeiras disponíveis:", num_cadeiras)
+                    global chairs_available
+                    for i in range(0,num_cadeiras):
+                        chairs_available.append(i+1)
+
+                    # Solicitar ao jogador que escolha um número de cadeira:
+                    chosen_chair = input("Cadeiras disponíveis: {} \nEscolha uma cadeira (digite apenas o número): ".format(chairs_available))
+                    # Enviar o número da cadeira escolhida para o servidor
+                    client_socket.sendall(chosen_chair.encode())
+
+
+                    # valid_choice = False
+                    # while not valid_choice:
+                    #     num_cadeira = input("Escolha o número da cadeira (1 a {}): ".format(num_cadeiras))
+                    #     if num_cadeira.isdigit() and 1 <= int(num_cadeira) <= num_cadeiras:
+                    #         valid_choice = True
+                    #     else:
+                    #         print("Escolha inválida. Tente novamente.")
+
+                    # Enviar o número da cadeira escolhida para o servidor
+                    # client_socket.sendall(num_cadeira.encode())
+                else:
+                    print("[1] Unexpected server message: " + response)
             else:
-                print("Unexpected server message: " + response)
+                print("[2] Unexpected server message: " + response)
 
 
 if __name__ == '__main__':
