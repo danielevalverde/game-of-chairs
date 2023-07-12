@@ -42,11 +42,6 @@ def play_music():
 def stop_music(sound_thread_pos):
     global stop_play_thread
     stop_play_thread = True
-    # try:
-    # sound_threads[sound_thread_pos].terminate()
-    # sound_threads[sound_thread_pos] = True
-    # except:
-    #     pass
 
 
 def find_free_ports(start_port, end_port):
@@ -89,7 +84,7 @@ def play_game():
         #     except:
         #         pass
 
-        # TODO: o código abaixo deve ser descomentado
+
         global PORT
         while True:
             try:
