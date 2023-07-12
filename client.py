@@ -136,27 +136,18 @@ def play_game():
                         elif resp == constants.ALREADY_IN_USE:
                             print("Cadeira já em uso. Selecione uma outra")
                         elif resp == constants.INVALID:
-                            print("Invalid value provided")
+                            print("Valor inválido")
                         elif resp == constants.YOU_LOST:
                             print("Você perdeu")
                             break
                         else:
-                            print("[3] Unexpected server message: " + response)
+                            print("[3] Mensagem não esperada: " + response)
 
-                    # valid_choice = False
-                    # while not valid_choice:
-                    #     num_cadeira = input("Escolha o número da cadeira (1 a {}): ".format(num_cadeiras))
-                    #     if num_cadeira.isdigit() and 1 <= int(num_cadeira) <= num_cadeiras:
-                    #         valid_choice = True
-                    #     else:
-                    #         print("Escolha inválida. Tente novamente.")
 
-                    # Enviar o número da cadeira escolhida para o servidor
-                    # client_socket.sendall(num_cadeira.encode())
                 else:
-                    print("[1] Unexpected server message: " + response)
+                    print("[1] Mensagem não esperada: " + response)
             else:
-                print("[2] Unexpected server message: " + response)
+                print("[2] Mensagem não esperada: " + response)
 
 
 if __name__ == '__main__':

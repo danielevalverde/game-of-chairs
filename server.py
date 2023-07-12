@@ -85,23 +85,27 @@ def handle_client(conn, music_stop_event):
                         conn.sendall(("QTD_CADEIRAS=" + str(len(chairs))).encode())
                         # E recebemos o pedido do cliente com a cadeira que deseja
                         # o seguinte vai estar num loop até o cliente conseguir uma cadeira ou morrer tentando
-                        resp = conn.recv(1024).decode()
-                        chosen_chair = int(resp)
-                        if 1 > chosen_chair or chosen_chair > len(chairs):
-                            # print("tente novamente. cadeira inválida")
-                            response = constants.INVALID
-                        else:
-                            #TODO: fazer lock!!
-                            if chairs[chosen_chair - 1] == '-':
-                                # print("cliente", conn.getpeername(), " conseguiu a cadeira. invalida para os outros")
-                                chairs[chosen_chair - 1] = conn.getpeername()
-                                response = constants.SUCCESS
+                        response = ''
+                        while response != constants.SUCCESS and chairs.__contains__('-'):#TODO: quando o jogador perdeu, ele para tbm
+                            resp = conn.recv(1024).decode()
+                            chosen_chair = int(resp)
+                            if 1 > chosen_chair or chosen_chair > len(chairs):
+                                # print("tente novamente. cadeira inválida")
+                                response = constants.INVALID
                             else:
-                                # print("Cadeira já foi escolhida. Procure outra.")
-                                response = constants.ALREADY_IN_USE
+                                # TODO: fazer lock!!
+                                if chairs[chosen_chair - 1] == '-':
+                                    # print("cliente", conn.getpeername(), " conseguiu a cadeira. invalida para os outros")
+                                    chairs[chosen_chair - 1] = conn.getpeername()
+                                    response = constants.SUCCESS
+                                else:
+                                    # print("Cadeira já foi escolhida. Procure outra.")
+                                    response = constants.ALREADY_IN_USE
 
-                        conn.sendall(response.encode())
-
+                            conn.sendall(response.encode())
+                        if response != constants.SUCCESS:
+                            #mata a conexão
+                            conn.close()
 
                     # todo: a música já está tocando. Testa se é hora de parar a música para mandar o comando de parada
 
@@ -145,12 +149,12 @@ def manage_game(music_stop_event):
     # global music_should_stop
     # depois que começar, para cada turno:
     while True:
-        #espera_novo_turno(_curr_turn, curr_turn)
-        #se algum elemento dentro de chairs estiver com '-', não é fim de turno
+        # espera_novo_turno(_curr_turn, curr_turn)
+        # se algum elemento dentro de chairs estiver com '-', não é fim de turno
         while chairs.__contains__('-'): pass
-        #Aqui estamos no fim de um turno (ou começo do primeiro)
+        # Aqui estamos no fim de um turno (ou começo do primeiro)
 
-        chairs = ['-'] * players_ready #todo: temos que desconectar os clientes quando perdem
+        chairs = ['-'] * players_ready  # todo: temos que desconectar os clientes quando perdem
         print("players ready: ", players_ready)
         # music_should_stop = False
         music_stop_event.clear()
@@ -159,7 +163,7 @@ def manage_game(music_stop_event):
             chairs.pop()
             print("removida uma cadeira")
         else:
-            print("Nenhuma cadeira. Fim do Jogo")#TODO: dizer quem é o vencedor
+            print("Nenhuma cadeira. Fim do Jogo")  # TODO: dizer quem é o vencedor
 
         # recuperar um tempo, esperar,  mandar o comando de parada
         time_to_wait = random.randint(5, 10)
