@@ -43,8 +43,6 @@ Os jogadores que não conseguiram encontrar uma cadeira são eliminados.
 O servidor repete os passos 4-6 até que reste apenas um jogador.
 O último jogador é declarado o vencedor e o jogo termina.
 
-O servidor precisa rastrear o estado do jogo, incluindo as cadeiras disponíveis e os jogadores eliminados oque requer uma estrutura de dados adequada. Podemos utilizar uma implementação de pub/sub ou stream, como disponíveis no banco de dados em memória Redis.
-
 ### Executando o jogo
 Defina o endereço IP e a porta em que o servidor será executado, ajustando as variáveis HOST e PORT no código do servidor.
 Abra um terminal ou prompt de comando e navegue até o diretório onde o arquivo do servidor está localizado.
