@@ -10,8 +10,6 @@ import constants
 # HOST = '127.0.0.1'
 HOST = 'localhost'
 PORT = 5502
-PORT_1 = -1
-PORT_2 = -1
 chairs_available = []
 sound_threads = []
 stop_play_thread = False
@@ -43,23 +41,6 @@ def play_music():
 def stop_music(sound_thread_pos):
     global stop_play_thread
     stop_play_thread = True
-
-
-def find_free_ports(start_port, end_port):
-    free_ports = []
-    for port in range(start_port, end_port + 1):
-        # Tenta criar um socket na porta específica
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        result = sock.connect_ex(('localhost', port))
-
-        # Se o resultado for 0, a porta está em uso; caso contrário, a porta está livre
-        if result != 0:
-            return port
-            # free_ports.append(port)
-
-        sock.close()
-
-    return free_ports
 
 
 def play_game():
